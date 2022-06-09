@@ -1,4 +1,8 @@
-pub mod delay_line;
+mod delay_line;
+mod lfo;
+
+pub use delay_line::*;
+pub use lfo::*;
 
 #[cfg(test)]
 mod tests {
