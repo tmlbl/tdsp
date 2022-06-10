@@ -18,22 +18,25 @@ impl<T: num::Float> DelayLine<T> {
 
     #[inline]
     pub fn write(&mut self, channel: usize, sample: T) {
-        let ix = self.write_indexes[channel] + (channel * self.buf_size);
-        self.data[ix] = sample;
         self.write_indexes[channel] += 1;
         self.write_indexes[channel] %= self.buf_size;
+        let ix = self.write_indexes[channel] + (channel * self.buf_size);
+        self.data[ix] = sample;
     }
 
     #[inline]
     pub fn read(&self, channel: usize, mut delay_samples: usize) -> &T {
-        if delay_samples > self.data.len() {
-            delay_samples %= self.data.len()
+        if delay_samples > self.buf_size {
+            delay_samples %= self.buf_size
         }
         let mut index: isize = (self.write_indexes[channel] as isize) -
-            (delay_samples as isize) - 1;
+            (delay_samples as isize);
+        // Wrap if negative
         if index < 0 {
-            index += self.data.len() as isize;
+            index += self.buf_size as isize;
         }
+        // Add channel offset
+        index += (channel * self.buf_size) as isize;
         self.data.get(index as usize).unwrap()
     }
 
@@ -64,11 +67,17 @@ mod tests {
 
     #[test]
     fn it_is_circular() {
-        let mut delay: DelayLine<f32> = DelayLine::new(3, 1);
-        for i in 1..11 {
-            delay.write(0, i as f32);
-        }
-        assert_eq!(delay.read(0, 1).to_owned(), 9.0);
+        let mut delay: DelayLine<f32> = DelayLine::new(3, 2);
+        delay.write(0, 1.0);
+        delay.write(0, 2.0);
+        delay.write(0, 3.0);
+
+        delay.write(1, 4.0);
+        delay.write(1, 5.0);
+        delay.write(1, 6.0);
+
+        assert_eq!(delay.read(0, 2).to_owned(), 1.0);
+        assert_eq!(delay.read(1, 2).to_owned(), 4.0);
     }
 
     #[test]
