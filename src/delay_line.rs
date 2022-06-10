@@ -16,6 +16,7 @@ impl<T: num::Float> DelayLine<T> {
         }
     }
 
+    #[inline]
     pub fn write(&mut self, channel: usize, sample: T) {
         let ix = self.write_indexes[channel] + (channel * self.buf_size);
         self.data[ix] = sample;
@@ -23,6 +24,7 @@ impl<T: num::Float> DelayLine<T> {
         self.write_indexes[channel] %= self.buf_size;
     }
 
+    #[inline]
     pub fn read(&self, channel: usize, mut delay_samples: usize) -> &T {
         if delay_samples > self.data.len() {
             delay_samples %= self.data.len()
@@ -35,6 +37,7 @@ impl<T: num::Float> DelayLine<T> {
         self.data.get(index as usize).unwrap()
     }
 
+    #[inline]
     pub fn read_interpolated(&self, channel: usize, delay: T) -> T {
         // Read from the int index
         let floored = delay.floor().to_usize().unwrap();
